@@ -66,6 +66,7 @@ export const StateTable: React.FC<StateTableProps> = ({
                       <SelectItem value="start">Start</SelectItem>
                       <SelectItem value="transition">Transition</SelectItem>
                       <SelectItem value="final">Final</SelectItem>
+                      <SelectItem value="start+final">Start + Final</SelectItem>
                     </SelectContent>
                   </Select>
                 </td>

@@ -2,13 +2,13 @@ export interface Transitions {
   [key: string]: string;
 }
 
-export interface DFAState {
+export type DFAState = {
   id: string;
-  type: 'start' | 'transition' | 'final';
-  transitions: Transitions;
+  type: 'start' | 'transition' | 'final' | 'start+final';  // Added 'start+final' type
+  transitions: Record<string, string>;
   x: number;
   y: number;
-}
+};
 
 export interface PathData {
   path: string;

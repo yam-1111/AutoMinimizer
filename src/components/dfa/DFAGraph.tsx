@@ -31,6 +31,9 @@ export const DFAGraph: React.FC<DFAGraphProps> = ({
     return acc;
   }, {} as Record<string, { symbols: string[], source: DFAState, target: string }>);
 
+  const isStartState = (type: string) => type === 'start' || type === 'start+final';
+  const isFinalState = (type: string) => type === 'final' || type === 'start+final';
+
   return (
     <svg 
       ref={svgRef}
@@ -77,7 +80,7 @@ export const DFAGraph: React.FC<DFAGraphProps> = ({
           className="transition-transform duration-200 cursor-move"
         >
           {/* Start state arrow */}
-          {node.type === 'start' && (
+          {isStartState(node.type) && (
             <path
               d={`M ${node.x - 40} ${node.y} L ${node.x - 20} ${node.y}`}
               stroke="hsl(var(--primary))"
@@ -93,13 +96,13 @@ export const DFAGraph: React.FC<DFAGraphProps> = ({
             r="20"
             className={`
               fill-background stroke-2
-              ${node.type === 'start' ? 'stroke-dfa-start' : 
-                node.type === 'final' ? 'stroke-dfa-final' : 'stroke-dfa-transition'}
+              ${isStartState(node.type) ? 'stroke-dfa-start' : 
+                isFinalState(node.type) ? 'stroke-dfa-final' : 'stroke-dfa-transition'}
             `}
           />
           
           {/* Final state double circle */}
-          {node.type === 'final' && (
+          {isFinalState(node.type) && (
             <circle
               cx={node.x}
               cy={node.y}

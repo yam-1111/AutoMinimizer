@@ -19,8 +19,8 @@ import {
 const DFAVisualizer = () => {
   const [alphabet, setAlphabet] = useState('a,b');
   const [states, setStates] = useState<DFAState[]>([
-    { id: 'q0', type: 'start', transitions: { a: 'none', b: 'none' }, x: 100, y: 200 },
-    { id: 'q1', type: 'transition', transitions: { a: 'none', b: 'none' }, x: 250, y: 200 }
+    { id: 'q0', type: 'start+final', transitions: { a: 'none', b: 'none' }, x: 200, y: 300 }, // Changed to start+final
+    { id: 'q1', type: 'transition', transitions: { a: 'none', b: 'none' }, x: 500, y: 300 }
   ]);
   const [showWarning, setShowWarning] = useState(false);
   const [warningMessage, setWarningMessage] = useState('');
@@ -31,21 +31,15 @@ const DFAVisualizer = () => {
   const alphabetArray = alphabet.split(',').map(char => char.trim()).filter(Boolean);
 
   const handleAlphabetChange = (value: string) => {
-    // Replace invalid characters, excluding commas
     const newAlphabet = value.replace(/[^a-z0-9!@#$%^&*()_+\-=~,]/gi, '');
-  
-    // Split the alphabet string on commas and filter out any empty strings
     setAlphabet(newAlphabet);
-  
     const newAlphabetArray = newAlphabet.split(',').map(char => char.trim()).filter(Boolean);
   
     setStates(prevStates => prevStates.map(state => {
-      // Ensure transitions only have valid symbols in the alphabet
       const updatedTransitions = Object.fromEntries(
         newAlphabetArray.map(char => [char, 'none'])
       );
   
-      // Include any existing transitions for symbols that still exist in the new alphabet
       Object.entries(state.transitions).forEach(([symbol, target]) => {
         if (newAlphabetArray.includes(symbol)) {
           updatedTransitions[symbol] = target;
@@ -58,9 +52,6 @@ const DFAVisualizer = () => {
       };
     }));
   };
-  
-
-  
 
   const handleMouseDown = (event: React.MouseEvent, stateId: string) => {
     setDraggedState(stateId);
@@ -92,7 +83,6 @@ const DFAVisualizer = () => {
 
   const addState = () => {
     const lastState = states[states.length - 1];
-    // Find the lowest available state number
     const usedNumbers = states.map(s => parseInt(s.id.substring(1)));
     let newNumber = 0;
     while (usedNumbers.includes(newNumber)) {
@@ -103,7 +93,7 @@ const DFAVisualizer = () => {
       id: `q${newNumber}`,
       type: 'transition',
       transitions: Object.fromEntries(alphabetArray.map(char => [char, 'none'])),
-      x: lastState.x + 150,
+      x: lastState.x + 300,
       y: lastState.y
     };
     setStates([...states, newState]);
@@ -123,10 +113,8 @@ const DFAVisualizer = () => {
       return;
     }
     
-    // Remove the state
     newStates.splice(index, 1);
     
-    // Update transitions that pointed to higher numbered states
     const removedNumber = parseInt(removedState.substring(1));
     newStates.forEach(state => {
       Object.entries(state.transitions).forEach(([key, value]) => {
@@ -139,7 +127,6 @@ const DFAVisualizer = () => {
       });
     });
     
-    // Rename states to maintain sequential ordering
     newStates.forEach((state, i) => {
       const currentNumber = parseInt(state.id.substring(1));
       if (currentNumber > removedNumber) {
@@ -151,43 +138,39 @@ const DFAVisualizer = () => {
   };
 
   const handleTypeChange = (index: number, newType: string) => {
+    // Validate type changes
+    if (newType === 'start' || newType === 'start+final') {
+      // Check if there's already a start state
+      const hasStartState = states.some((state, i) => 
+        i !== index && (state.type === 'start' || state.type === 'start+final')
+      );
+      
+      if (hasStartState) {
+        setWarningMessage('Only one start state is allowed');
+        setShowWarning(true);
+        return;
+      }
+    }
+
     const newStates = [...states];
     newStates[index].type = newType as DFAState['type'];
     setStates(newStates);
   };
 
-
   const handleTransitionChange = (stateIndex: number, symbol: string, target: string) => {
-    const newStates = [...states];
-    const currentState = newStates[stateIndex];
-  
-    // Check if the transition is a self-loop (i.e., target is the current state)
-    if (target !== 'none' && target === currentState.id) {
-      // Handle self-loop transition
-      currentState.transitions[symbol] = target;
-    } else if (target !== 'none') {
-      // Handle normal transitions
-      if (currentState.transitions[symbol] === 'none') {
-        currentState.transitions[symbol] = target;
-      } else if (Array.isArray(currentState.transitions[symbol])) {
-        if (!currentState.transitions[symbol].includes(target)) {
-          currentState.transitions[symbol].push(target);
-        }
-      } else {
-        currentState.transitions[symbol] = [currentState.transitions[symbol], target];
-      }
-    } else {
-      // Remove transition if target is 'none'
-      currentState.transitions[symbol] = target;
-    }
-  
-    // Ensure that the alphabet remains intact and is updated properly
-    setStates(newStates);
+    setStates(prevStates => {
+      const newStates = [...prevStates];
+      const currentState = { ...newStates[stateIndex] };
+      const newTransitions = { ...currentState.transitions };
+      newTransitions[symbol] = target;
+      currentState.transitions = newTransitions;
+      newStates[stateIndex] = currentState;
+      return newStates;
+    });
   };
   
   return (
     <div className="flex flex-col h-screen">
-      {/* Title Section */}
       <div className="p-6 border-b">
         <h1 className="text-2xl font-bold text-primary">AutoMinimizer</h1>
         <p className="text-sm text-muted-foreground mt-1">
@@ -195,13 +178,10 @@ const DFAVisualizer = () => {
         </p>
       </div>
 
-      {/* Main Content */}
       <ResizablePanelGroup direction="horizontal" className="flex-1">
-        {/* Left Sidebar */}
-        <ResizablePanel defaultSize={25} minSize={20} maxSize={40}>
+        <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
           <div className="h-full border-r border-border bg-card p-4 overflow-y-auto">
             <div className="space-y-6">
-              {/* Alphabet Input */}
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">Alphabet (Σ)</label>
                 <input
@@ -227,8 +207,7 @@ const DFAVisualizer = () => {
 
         <ResizableHandle />
 
-        {/* Right Side - SVG Graph */}
-        <ResizablePanel defaultSize={75}>
+        <ResizablePanel defaultSize={80}>
           <div className="h-full relative bg-background">
             <DFAGraph
               states={states}
@@ -241,7 +220,6 @@ const DFAVisualizer = () => {
         </ResizablePanel>
       </ResizablePanelGroup>
 
-      {/* Warning Dialog */}
       <Dialog open={showWarning} onOpenChange={setShowWarning}>
         <DialogContent>
           <DialogHeader>
