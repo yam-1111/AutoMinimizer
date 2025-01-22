@@ -53,6 +53,69 @@ const DFAVisualizer = () => {
     }));
   };
 
+  const handleExport = () => {
+    const data = {
+      alphabet,
+      states
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'automaton.atl';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "Export Successful",
+      description: "Your automaton has been exported successfully.",
+    });
+  };
+
+  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.atl')) {
+      toast({
+        title: "Invalid File",
+        description: "Please select a .atl file",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const data = JSON.parse(content);
+
+        if (data.alphabet && Array.isArray(data.states)) {
+          setAlphabet(data.alphabet);
+          setStates(data.states);
+          toast({
+            title: "Import Successful",
+            description: "Your automaton has been imported successfully.",
+          });
+        } else {
+          throw new Error('Invalid file format');
+        }
+      } catch (error) {
+        toast({
+          title: "Import Failed",
+          description: "The selected file contains invalid data",
+          variant: "destructive"
+        });
+      }
+    };
+    reader.readAsText(file);
+    // Reset the input value to allow importing the same file again
+    event.target.value = '';
+  };
+
   const handleMouseDown = (event: React.MouseEvent, stateId: string) => {
     setDraggedState(stateId);
     event.preventDefault();
@@ -201,6 +264,8 @@ const DFAVisualizer = () => {
                 onTransitionChange={handleTransitionChange}
                 onRemoveState={removeState}
                 onAddState={addState}
+                onImport={handleImport}
+                onExport={handleExport}
               />
             </div>
           </div>

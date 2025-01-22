@@ -1,7 +1,7 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import { DFAState } from '@/types/dfa';
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -16,6 +16,8 @@ interface StateTableProps {
   onTransitionChange: (stateIndex: number, symbol: string, target: string) => void;
   onRemoveState: (index: number) => void;
   onAddState: () => void;
+  onImport: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onExport: () => void;
 }
 
 export const StateTable: React.FC<StateTableProps> = ({
@@ -25,6 +27,8 @@ export const StateTable: React.FC<StateTableProps> = ({
   onTransitionChange,
   onRemoveState,
   onAddState,
+  onImport,
+  onExport,
 }) => {
   return (
     <div className="flex flex-col h-full">
@@ -37,9 +41,28 @@ export const StateTable: React.FC<StateTableProps> = ({
           Add State
         </button>
       </div>
-
-      <div 
-        className="border rounded-lg resize overflow-auto min-h-[200px] max-h-[400px]" 
+      <div className="flex gap-2 mb-4">
+        <label className="flex-1">
+          <input
+            type="file"
+            accept=".atl"
+            onChange={onImport}
+            className="hidden"
+            id="import-file"
+          />
+          <div className="w-full px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:opacity-90 transition-opacity text-center cursor-pointer">
+            Import (.atl)
+          </div>
+        </label>
+        <button
+          onClick={onExport}
+          className="flex-1 px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:opacity-90 transition-opacity"
+        >
+          Export (.atl)
+        </button>
+      </div>
+      <div
+        className="border rounded-lg resize overflow-auto min-h-[200px] max-h-[400px]"
         style={{ minWidth: '300px' }}
       >
         <table className="w-full">
