@@ -157,7 +157,7 @@ export const DFAGraph: React.FC<DFAGraphProps> = ({
           {/* Start state arrow */}
           {isStartState(node.type) && (
             <path
-              d={`M ${node.x - 30} ${node.y} L ${node.x - 18} ${node.y}`}
+              d={`M ${node.x - 50} ${node.y} L ${node.x - 20} ${node.y}`}
               stroke="black"
               strokeWidth="1.5"
               markerEnd="url(#arrowhead)"

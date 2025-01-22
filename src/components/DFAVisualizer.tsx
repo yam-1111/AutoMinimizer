@@ -19,7 +19,7 @@ import {
 const DFAVisualizer = () => {
   const [alphabet, setAlphabet] = useState('a,b');
   const [states, setStates] = useState<DFAState[]>([
-    { id: 'q0', type: 'start', transitions: { a: 'none', b: 'none' }, x: 200, y: 300 }, // Changed to start+final
+    { id: 'q0', type: 'start', transitions: { a: 'none', b: 'none' }, x: 200, y: 300 },
     { id: 'q1', type: 'transition', transitions: { a: 'none', b: 'none' }, x: 300, y: 300 }
   ]);
   const [showWarning, setShowWarning] = useState(false);
