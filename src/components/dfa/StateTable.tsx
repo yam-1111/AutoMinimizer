@@ -27,7 +27,7 @@ export const StateTable: React.FC<StateTableProps> = ({
   onAddState,
 }) => {
   return (
-    <div>
+    <div className="flex flex-col h-full">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-medium text-foreground">States</h3>
         <button
@@ -38,9 +38,12 @@ export const StateTable: React.FC<StateTableProps> = ({
         </button>
       </div>
 
-      <div className="border rounded-lg overflow-hidden">
+      <div 
+        className="border rounded-lg resize overflow-auto min-h-[200px] max-h-[400px]" 
+        style={{ minWidth: '300px' }}
+      >
         <table className="w-full">
-          <thead className="bg-muted">
+          <thead className="bg-muted sticky top-0">
             <tr>
               <th className="p-3 text-left text-sm font-medium text-muted-foreground">State</th>
               <th className="p-3 text-left text-sm font-medium text-muted-foreground">Type</th>

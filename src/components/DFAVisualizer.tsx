@@ -20,7 +20,7 @@ const DFAVisualizer = () => {
   const [alphabet, setAlphabet] = useState('a,b');
   const [states, setStates] = useState<DFAState[]>([
     { id: 'q0', type: 'start', transitions: { a: 'none', b: 'none' }, x: 200, y: 300 }, // Changed to start+final
-    { id: 'q1', type: 'transition', transitions: { a: 'none', b: 'none' }, x: 500, y: 300 }
+    { id: 'q1', type: 'transition', transitions: { a: 'none', b: 'none' }, x: 300, y: 300 }
   ]);
   const [showWarning, setShowWarning] = useState(false);
   const [warningMessage, setWarningMessage] = useState('');
@@ -93,7 +93,7 @@ const DFAVisualizer = () => {
       id: `q${newNumber}`,
       type: 'transition',
       transitions: Object.fromEntries(alphabetArray.map(char => [char, 'none'])),
-      x: lastState.x + 300,
+      x: lastState.x + 100,
       y: lastState.y
     };
     setStates([...states, newState]);
