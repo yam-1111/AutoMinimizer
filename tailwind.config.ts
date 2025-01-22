@@ -53,11 +53,11 @@ export default {
           foreground: "hsl(var(--card-foreground))",
         },
         dfa: {
-          start: "#4F46E5",
-          transition: "#6B7280",
-          final: "#059669",
-          hover: "#E5E7EB",
-          line: "#9CA3AF"
+          start: "#000000",
+          transition: "#000000",
+          final: "#000000",
+          hover: "#000000",
+          line: "#000000"
         }
       },
       animation: {

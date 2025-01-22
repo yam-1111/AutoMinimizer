@@ -34,18 +34,93 @@ export const DFAGraph: React.FC<DFAGraphProps> = ({
   const isStartState = (type: string) => type === 'start' || type === 'start+final';
   const isFinalState = (type: string) => type === 'final' || type === 'start+final';
 
+  // Function to generate self-loop path
+  const generateSelfLoop = (node: DFAState, hasTopTransition: boolean) => {
+    const r = 18; // Node radius
+    const loopR = 12; // Loop radius
+    const verticalOffset = 15; // Distance above the state circle
+  
+    // Calculate the center point for the loop (above the node)
+    const loopCenterX = node.x;
+    const loopCenterY = node.y - r - verticalOffset;
+  
+    // Define the circular path
+    const startAngle = 0; // Start angle in degrees
+    const endAngle = 165; // Full circle in degrees
+  
+    // Arrowhead properties
+    const arrowLength = 3; // Length of the arrow lines
+    const arrowAngle = 10; // Angle of the arrowhead lines in degrees
+    const arrowRad = (arrowAngle * Math.PI) / 180;
+  
+    // Calculate the arrowhead position (at the right side of the circle)
+    const arrowBaseX = loopCenterX + loopR; // X-coordinate at the rightmost point of the circle
+    const arrowBaseY = loopCenterY;
+  
+    const arrowRightX = arrowBaseX + arrowLength * Math.cos(-arrowRad); // Top arrow line
+    const arrowRightY = arrowBaseY + arrowLength * Math.sin(-arrowRad);
+    const arrowLeftX = arrowBaseX + arrowLength * Math.cos(arrowRad); // Bottom arrow line
+    const arrowLeftY = arrowBaseY + arrowLength * Math.sin(arrowRad);
+  
+    return {
+      path: `M ${loopCenterX + loopR} ${loopCenterY} 
+             A ${loopR} ${loopR} 0 1 1 ${loopCenterX + loopR - 0.01} ${loopCenterY} 
+             M ${arrowBaseX} ${arrowBaseY}
+             L ${arrowRightX} ${arrowRightY}
+             M ${arrowBaseX} ${arrowBaseY}
+             L ${arrowLeftX} ${arrowLeftY}`,
+      labelX: loopCenterX,
+      labelY: loopCenterY - loopR - 2 // Position label above the loop
+    };
+  };
+  
+
   return (
     <svg 
       ref={svgRef}
-      className="w-full h-full"
+      className="w-full h-full scale-150 origin-center"
       onMouseMove={onMouseMove}
       onMouseUp={onMouseUp}
       onMouseLeave={onMouseUp}
+      viewBox="-100 -100 1200 800"
     >
       {/* Draw transitions */}
       {Object.entries(groupedTransitions).map(([key, { symbols, source, target }]) => {
         const targetNode = states.find(n => n.id === target);
         if (!targetNode) return null;
+
+        // Check if this is a self-loop
+        if (source.id === target) {
+          // Check if there are any incoming transitions from above
+          const hasTopTransition = Object.values(groupedTransitions).some(
+            trans => trans.target === source.id && 
+            states.find(s => s.id === trans.source.id)?.y < source.y
+          );
+          
+          const { path, labelX, labelY } = generateSelfLoop(source, hasTopTransition);
+          
+          return (
+            <g key={key}>
+              <path
+                d={path}
+                fill="none"
+                stroke="black"
+                strokeWidth="1.5"
+                className="transition-all duration-200"
+                markerEnd="url(#arrowhead)"
+              />
+              <text 
+                x={labelX} 
+                y={labelY} 
+                textAnchor="middle" 
+                dy=".3em"
+                className="text-lg fill-gray-900 font-serif tracking-wider"
+              >
+                {symbols.join(' , ')}
+              </text>
+            </g>
+          );
+        }
         
         const { path, labelX, labelY } = generatePath(source, targetNode);
         
@@ -54,7 +129,7 @@ export const DFAGraph: React.FC<DFAGraphProps> = ({
             <path
               d={path}
               fill="none"
-              stroke="hsl(var(--muted-foreground))"
+              stroke="black"
               strokeWidth="1.5"
               className="transition-all duration-200"
               markerEnd="url(#arrowhead)"
@@ -64,9 +139,9 @@ export const DFAGraph: React.FC<DFAGraphProps> = ({
               y={labelY} 
               textAnchor="middle" 
               dy=".3em"
-              className="text-sm fill-muted-foreground"
+              className="text-lg fill-gray-900 font-serif tracking-wider"
             >
-              {symbols.join(',')}
+              {symbols.join(' , ')}
             </text>
           </g>
         );
@@ -82,8 +157,8 @@ export const DFAGraph: React.FC<DFAGraphProps> = ({
           {/* Start state arrow */}
           {isStartState(node.type) && (
             <path
-              d={`M ${node.x - 40} ${node.y} L ${node.x - 20} ${node.y}`}
-              stroke="hsl(var(--primary))"
+              d={`M ${node.x - 30} ${node.y} L ${node.x - 18} ${node.y}`}
+              stroke="black"
               strokeWidth="1.5"
               markerEnd="url(#arrowhead)"
             />
@@ -93,12 +168,8 @@ export const DFAGraph: React.FC<DFAGraphProps> = ({
           <circle
             cx={node.x}
             cy={node.y}
-            r="20"
-            className={`
-              fill-background stroke-2
-              ${isStartState(node.type) ? 'stroke-dfa-start' : 
-                isFinalState(node.type) ? 'stroke-dfa-final' : 'stroke-dfa-transition'}
-            `}
+            r="18"
+            className="fill-background stroke-gray-900 stroke-2"
           />
           
           {/* Final state double circle */}
@@ -106,8 +177,8 @@ export const DFAGraph: React.FC<DFAGraphProps> = ({
             <circle
               cx={node.x}
               cy={node.y}
-              r="24"
-              className="fill-none stroke-dfa-final stroke-2"
+              r="22"
+              className="fill-none stroke-gray-900 stroke-2"
             />
           )}
           
@@ -116,8 +187,8 @@ export const DFAGraph: React.FC<DFAGraphProps> = ({
             x={node.x}
             y={node.y}
             textAnchor="middle"
-            dy=".3em"
-            className="select-none fill-foreground text-sm font-medium"
+            dy=".2em"
+            className="select-none fill-gray-900 text-lg font-serif"
           >
             {node.id}
           </text>
@@ -128,13 +199,17 @@ export const DFAGraph: React.FC<DFAGraphProps> = ({
       <defs>
         <marker
           id="arrowhead"
-          markerWidth="10"
-          markerHeight="7"
-          refX="9"
-          refY="3.5"
+          markerWidth="8"
+          markerHeight="6"
+          refX="8"
+          refY="3"
           orient="auto"
         >
-          <polygon points="0 0, 10 3.5, 0 7" className="fill-muted-foreground" />
+          <polygon 
+            points="0 0, 8 3, 0 6" 
+            fill="black" 
+            strokeWidth="1"
+          />
         </marker>
       </defs>
     </svg>
