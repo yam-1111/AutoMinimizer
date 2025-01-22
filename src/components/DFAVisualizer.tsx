@@ -34,21 +34,21 @@ const DFAVisualizer = () => {
     const newAlphabet = value.replace(/[^a-z0-9!@#$%^&*()_+\-=~,]/gi, '');
     setAlphabet(newAlphabet);
     const newAlphabetArray = newAlphabet.split(',').map(char => char.trim()).filter(Boolean);
-  
+
     setStates(prevStates => prevStates.map(state => {
       const updatedTransitions = Object.fromEntries(
         newAlphabetArray.map(char => [char, 'none'])
       );
-  
+
       Object.entries(state.transitions).forEach(([symbol, target]) => {
         if (newAlphabetArray.includes(symbol)) {
           updatedTransitions[symbol] = target;
         }
       });
-  
-      return { 
-        ...state, 
-        transitions: updatedTransitions 
+
+      return {
+        ...state,
+        transitions: updatedTransitions
       };
     }));
   };
@@ -88,7 +88,7 @@ const DFAVisualizer = () => {
     while (usedNumbers.includes(newNumber)) {
       newNumber++;
     }
-    
+
     const newState: DFAState = {
       id: `q${newNumber}`,
       type: 'transition',
@@ -102,19 +102,19 @@ const DFAVisualizer = () => {
   const removeState = (index: number) => {
     const newStates = [...states];
     const removedState = newStates[index].id;
-    
-    const hasIncomingTransitions = newStates.some(state => 
+
+    const hasIncomingTransitions = newStates.some(state =>
       Object.values(state.transitions).some(target => target === removedState)
     );
-    
+
     if (hasIncomingTransitions) {
       setWarningMessage('Cannot remove state with incoming transitions');
       setShowWarning(true);
       return;
     }
-    
+
     newStates.splice(index, 1);
-    
+
     const removedNumber = parseInt(removedState.substring(1));
     newStates.forEach(state => {
       Object.entries(state.transitions).forEach(([key, value]) => {
@@ -126,14 +126,14 @@ const DFAVisualizer = () => {
         }
       });
     });
-    
+
     newStates.forEach((state, i) => {
       const currentNumber = parseInt(state.id.substring(1));
       if (currentNumber > removedNumber) {
         state.id = `q${currentNumber - 1}`;
       }
     });
-    
+
     setStates(newStates);
   };
 
@@ -141,10 +141,10 @@ const DFAVisualizer = () => {
     // Validate type changes
     if (newType === 'start' || newType === 'start+final') {
       // Check if there's already a start state
-      const hasStartState = states.some((state, i) => 
+      const hasStartState = states.some((state, i) =>
         i !== index && (state.type === 'start' || state.type === 'start+final')
       );
-      
+
       if (hasStartState) {
         setWarningMessage('Only one start state is allowed');
         setShowWarning(true);
@@ -168,18 +168,19 @@ const DFAVisualizer = () => {
       return newStates;
     });
   };
-  
+
   return (
     <div className="flex flex-col h-screen">
-      <div className="p-6 border-b">
-        <h1 className="text-2xl font-bold text-primary">AutoMinimizer</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          A Visualizer for the Deterministic Finite Automata (DFA) Minimization
-        </p>
-      </div>
+
 
       <ResizablePanelGroup direction="horizontal" className="flex-1">
-        <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
+        <ResizablePanel defaultSize={30} minSize={15} maxSize={45}>
+          <div className="p-6 border-b">
+            <h1 className="text-2xl font-bold text-primary">AutoMinimizer</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              A Visualizer for the Deterministic Finite Automata (DFA) Minimization
+            </p>
+          </div>
           <div className="h-full border-r border-border bg-card p-4 overflow-y-auto">
             <div className="space-y-6">
               <div>
