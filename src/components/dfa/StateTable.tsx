@@ -45,7 +45,7 @@ export const StateTable: React.FC<StateTableProps> = ({
         <label className="flex-1">
           <input
             type="file"
-            accept=".atl"
+            accept=".alt"
             onChange={onImport}
             className="hidden"
             id="import-file"
@@ -58,7 +58,7 @@ export const StateTable: React.FC<StateTableProps> = ({
           onClick={onExport}
           className="flex-1 px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:opacity-90 transition-opacity"
         >
-          Export (.atl)
+          Export my DFA FSM
         </button>
       </div>
       <div

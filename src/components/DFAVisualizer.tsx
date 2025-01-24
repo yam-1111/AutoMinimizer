@@ -64,7 +64,7 @@ const DFAVisualizer = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'automaton.atl';
+    a.download = 'automaton.alt';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -80,10 +80,10 @@ const DFAVisualizer = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!file.name.endsWith('.atl')) {
+    if (!(file.name.endsWith('.atl') || file.name.endsWith('.alt'))) {
       toast({
-        title: "Invalid File",
-        description: "Please select a .atl file",
+        title: "Invalid DFA File",
+        description: "Please select a .alt file",
         variant: "destructive"
       });
       return;
@@ -100,7 +100,7 @@ const DFAVisualizer = () => {
           setStates(data.states);
           toast({
             title: "Import Successful",
-            description: "Your automaton has been imported successfully.",
+            description: "Your DFA FSM has been imported successfully.",
           });
         } else {
           throw new Error('Invalid file format');
