@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { DFAState } from '@/types/dfa';
 import { StateTable } from './dfa/StateTable';
+import { MyhillNerodeVisualizer } from './dfa/MyhillNerodeVisualizer';
 import { DFAGraph } from './dfa/DFAGraph';
 import {
   Dialog,
@@ -27,6 +28,7 @@ const DFAVisualizer = () => {
   const [draggedState, setDraggedState] = useState<string | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const { toast } = useToast();
+  const [minimizedStates, setMinimizedStates] = useState<DFAState[]>([]);
 
   const alphabetArray = alphabet.split(',').map(char => char.trim()).filter(Boolean);
 
@@ -234,10 +236,9 @@ const DFAVisualizer = () => {
 
   return (
     <div className="flex flex-col h-screen">
-
-
       <ResizablePanelGroup direction="horizontal" className="flex-1">
-        <ResizablePanel defaultSize={30} minSize={15} maxSize={45}>
+        {/* Left Panel - State Table */}
+        <ResizablePanel defaultSize={25} minSize={15} maxSize={45}>
           <div className="p-6 border-b">
             <h1 className="text-2xl font-bold text-primary">AutoMinimizer</h1>
             <p className="text-sm text-muted-foreground mt-1">
@@ -273,16 +274,33 @@ const DFAVisualizer = () => {
 
         <ResizableHandle />
 
-        <ResizablePanel defaultSize={80}>
-          <div className="h-full relative bg-background">
-            <DFAGraph
-              states={states}
-              svgRef={svgRef}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseDown={handleMouseDown}
-            />
-          </div>
+        {/* Right Panel - Graph and Minimization */}
+        <ResizablePanel defaultSize={75}>
+          <ResizablePanelGroup direction="vertical">
+            {/* Upper Panel - DFA Graph */}
+            <ResizablePanel defaultSize={50}>
+              <div className="h-full relative bg-background">
+                <DFAGraph
+                  states={states}
+                  svgRef={svgRef}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  onMouseDown={handleMouseDown}
+                />
+              </div>
+            </ResizablePanel>
+
+            <ResizableHandle />
+
+            {/* Lower Panel - Myhill-Nerode Visualization */}
+            <ResizablePanel defaultSize={50}>
+              <MyhillNerodeVisualizer
+                states={states}
+                alphabet={alphabetArray}
+                onMinimizedDFA={setMinimizedStates}
+              />
+            </ResizablePanel>
+          </ResizablePanelGroup>
         </ResizablePanel>
       </ResizablePanelGroup>
 

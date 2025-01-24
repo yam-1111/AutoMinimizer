@@ -15,3 +15,13 @@ export interface PathData {
   labelX: number;
   labelY: number;
 }
+
+export interface MyhillNerodeTable {
+  pairs: Record<string, Record<string, boolean>>;
+  iteration: number;
+  markingHistory: Array<{
+    pair: [string, string];
+    reason: string;
+    iteration: number;
+  }>;
+}
