@@ -66,7 +66,7 @@ export const MyhillNerodeVisualizer: React.FC<MyhillNerodeVisualizerProps> = ({
       states.slice(0, i).forEach(state2 => {
         const state1IsFinal = state1.type === 'final' || state1.type === 'start+final';
         const state2IsFinal = state2.type === 'final' || state2.type === 'start+final';
-        
+
         if (state1IsFinal !== state2IsFinal) {
           pairs[state1.id][state2.id] = true;
           markingHistory.push({
@@ -89,7 +89,7 @@ export const MyhillNerodeVisualizer: React.FC<MyhillNerodeVisualizerProps> = ({
     if (state1 === state2) return false;
     if (state1 === 'none' || state2 === 'none') return true;
     if (state1 === 'q0' || state2 === 'q0') return false; // Don't mark pairs with q0
-    
+
     const [higher, lower] = state1 > state2 ? [state1, state2] : [state2, state1];
     return table.pairs[higher]?.[lower] ?? false;
   };
@@ -106,7 +106,7 @@ export const MyhillNerodeVisualizer: React.FC<MyhillNerodeVisualizerProps> = ({
           for (const symbol of alphabet) {
             const nextState1 = state1.transitions[symbol];
             const nextState2 = state2.transitions[symbol];
-            
+
             if (nextState1 !== nextState2) {
               if (isStatePairMarked(nextState1, nextState2)) {
                 newPairs[state1.id][state2.id] = true;
@@ -168,19 +168,19 @@ export const MyhillNerodeVisualizer: React.FC<MyhillNerodeVisualizerProps> = ({
 
   const generateMinimizedDFA = () => {
     const equivalenceClasses = findEquivalenceClasses();
-    
+
     return equivalenceClasses.map((eqClass, index) => {
       // Find a representative state from the equivalence class
       const representativeState = states.find(s => s.id === eqClass[0])!;
-      
+
       // Determine the type of the new state
-      const hasStart = eqClass.some(id => 
+      const hasStart = eqClass.some(id =>
         states.find(s => s.id === id)?.type.includes('start')
       );
-      const hasFinal = eqClass.some(id => 
+      const hasFinal = eqClass.some(id =>
         states.find(s => s.id === id)?.type.includes('final')
       );
-      
+
       let type: DFAState['type'] = 'transition';
       if (hasStart && hasFinal) type = 'start+final';
       else if (hasStart) type = 'start';
@@ -191,7 +191,7 @@ export const MyhillNerodeVisualizer: React.FC<MyhillNerodeVisualizerProps> = ({
       Object.keys(newTransitions).forEach(symbol => {
         const oldTarget = newTransitions[symbol];
         if (oldTarget !== 'none') {
-          const targetClass = equivalenceClasses.findIndex(ec => 
+          const targetClass = equivalenceClasses.findIndex(ec =>
             ec.includes(oldTarget)
           );
           newTransitions[symbol] = targetClass !== -1 ? `q${targetClass}` : 'none';
@@ -251,12 +251,12 @@ export const MyhillNerodeVisualizer: React.FC<MyhillNerodeVisualizerProps> = ({
                         {state1.id}
                       </TableCell>
                       {states.slice(0, i).map((state2) => (
-                        <TableCell 
+                        <TableCell
                           key={`${state1.id}-${state2.id}`}
                           className={
-                            table.pairs[state1.id]?.[state2.id] 
-                              ? 'bg-red-100 dark:bg-red-900' 
-                              :  'bg-green-100  dark:bg-blue'
+                            table.pairs[state1.id]?.[state2.id]
+                              ? 'bg-red-100 dark:bg-red-900'
+                              : 'bg-green-100  dark:bg-blue'
                           }
                         >
                           {table.pairs[state1.id]?.[state2.id] ? '×' : ''}
@@ -273,7 +273,7 @@ export const MyhillNerodeVisualizer: React.FC<MyhillNerodeVisualizerProps> = ({
             <h4 className="font-medium mb-2">Marking History</h4>
             <div className="max-h-[calc(100vh-400px)] overflow-y-auto">
               {table.markingHistory.map((entry, index) => (
-                <div 
+                <div
                   key={index}
                   className="mb-2 p-2 border rounded"
                 >
@@ -294,13 +294,28 @@ export const MyhillNerodeVisualizer: React.FC<MyhillNerodeVisualizerProps> = ({
               <DFAGraph
                 states={minimizedStates}
                 svgRef={svgRef}
-                onMouseMove={() => {}}
-                onMouseUp={() => {}}
-                onMouseDown={() => {}}
+                onMouseMove={() => { }}
+                onMouseUp={() => { }}
+                onMouseDown={() => { }}
               />
             </div>
           </div>
         )}
+
+        <div className="border rounded-lg p-4 mt-4">
+          <h4 className="font-medium mb-2">Unmarked Pairs</h4>
+          <div className="overflow-auto max-h-[300px]">
+            {states.map((state1, i) => i > 0 && (
+              states.slice(0, i).map((state2) => (
+                !table.pairs[state1.id]?.[state2.id] && (
+                  <div key={`${state1.id}-${state2.id}`} className="mb-2 p-2 border rounded">
+                    <p>({state1.id}, {state2.id})</p>
+                  </div>
+                )
+              ))
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
