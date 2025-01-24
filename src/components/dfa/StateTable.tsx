@@ -51,7 +51,7 @@ export const StateTable: React.FC<StateTableProps> = ({
             id="import-file"
           />
           <div className="w-full px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:opacity-90 transition-opacity text-center cursor-pointer">
-            Import (.atl)
+            Import (.alt)
           </div>
         </label>
         <button
