@@ -178,9 +178,7 @@ export const DFAGraph: React.FC<DFAGraphProps> = ({
                 <path
                   d={path}
                   fill="none"
-                  stroke="black"
-                  strokeWidth="1.5"
-                  className="transition-all duration-200"
+                  className="stroke-foreground stroke-1.5 transition-all duration-200"
                   markerEnd="url(#arrowhead)"
                 />
                 <text 
@@ -188,7 +186,7 @@ export const DFAGraph: React.FC<DFAGraphProps> = ({
                   y={labelY} 
                   textAnchor="middle" 
                   dy=".3em"
-                  className="text-lg fill-gray-900 font-serif tracking-wider"
+                  className="text-lg fill-foreground font-serif tracking-wider"
                 >
                   {symbols.join(' , ')}
                 </text>
@@ -205,7 +203,7 @@ export const DFAGraph: React.FC<DFAGraphProps> = ({
                 fill="none"
                 stroke="black"
                 strokeWidth="1.5"
-                className="transition-all duration-200"
+                className="stroke-foreground stroke-1.5 transition-all duration-200"
                 markerEnd="url(#arrowhead)"
               />
               <text 
@@ -213,7 +211,7 @@ export const DFAGraph: React.FC<DFAGraphProps> = ({
                 y={labelY} 
                 textAnchor="middle" 
                 dy=".3em"
-                className="text-lg fill-gray-900 font-serif tracking-wider"
+                className="text-lg fill-foreground font-serif tracking-wider"
               >
                 {symbols.join(' , ')}
               </text>
@@ -232,8 +230,7 @@ export const DFAGraph: React.FC<DFAGraphProps> = ({
             {isStartState(node.type) && (
               <path
                 d={`M ${node.x - 50} ${node.y} L ${node.x - 20} ${node.y}`}
-                stroke="black"
-                strokeWidth="1.5"
+                className="stroke-foreground stroke-1.5"
                 markerEnd="url(#arrowhead)"
               />
             )}
@@ -243,7 +240,7 @@ export const DFAGraph: React.FC<DFAGraphProps> = ({
               cx={node.x}
               cy={node.y}
               r="18"
-              className="fill-background stroke-gray-900 stroke-2"
+              className="fill-background stroke-foreground stroke-2"
             />
             
             {/* Final state double circle */}
@@ -252,7 +249,7 @@ export const DFAGraph: React.FC<DFAGraphProps> = ({
                 cx={node.x}
                 cy={node.y}
                 r="22"
-                className="fill-none stroke-gray-900 stroke-2"
+                className="fill-none stroke-foreground stroke-2"
               />
             )}
             
@@ -262,7 +259,7 @@ export const DFAGraph: React.FC<DFAGraphProps> = ({
               y={node.y}
               textAnchor="middle"
               dy=".2em"
-              className="select-none fill-gray-900 text-lg font-serif"
+              className="select-none fill-foreground text-lg font-serif"
             >
               {node.id}
             </text>
@@ -281,7 +278,7 @@ export const DFAGraph: React.FC<DFAGraphProps> = ({
           >
             <polygon 
               points="0 0, 8 3, 0 6" 
-              fill="black" 
+              className="fill-foreground"
               strokeWidth="1"
             />
           </marker>

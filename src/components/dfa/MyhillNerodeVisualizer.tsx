@@ -35,6 +35,7 @@ export const MyhillNerodeVisualizer: React.FC<MyhillNerodeVisualizerProps> = ({
   });
   const [showMinimized, setShowMinimized] = useState(false);
   const [minimizationComplete, setMinimizationComplete] = useState(false);
+
   const [minimizedStates, setMinimizedStates] = useState<DFAState[]>([]);
   const svgRef = React.useRef<SVGSVGElement>(null);
 
@@ -95,6 +96,8 @@ export const MyhillNerodeVisualizer: React.FC<MyhillNerodeVisualizerProps> = ({
   };
 
   const performIteration = () => {
+    if (minimizationComplete) return;
+
     const newPairs = JSON.parse(JSON.stringify(table.pairs));
     const newHistory = [...table.markingHistory];
     let changed = false;
@@ -255,8 +258,8 @@ export const MyhillNerodeVisualizer: React.FC<MyhillNerodeVisualizerProps> = ({
                           key={`${state1.id}-${state2.id}`}
                           className={
                             table.pairs[state1.id]?.[state2.id]
-                              ? 'bg-red-100 dark:bg-red-900'
-                              : 'bg-green-100  dark:bg-blue'
+                              ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-300'
+                              : 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-300'
                           }
                         >
                           {table.pairs[state1.id]?.[state2.id] ? '×' : ''}
