@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { DFAState } from '@/types/dfa';
 import { generatePath } from '@/utils/pathUtils';
+import { Button } from '@/components/ui/button'; // Import shadcn Button
+import { ZoomIn, ZoomOut } from 'lucide-react'; // Import icons for zoom controls
 
 interface DFAGraphProps {
   states: DFAState[];
@@ -17,6 +19,10 @@ export const DFAGraph: React.FC<DFAGraphProps> = ({
   onMouseUp,
   onMouseDown,
 }) => {
+  const [scale, setScale] = useState(1); // State to manage zoom level
+  const [viewBox, setViewBox] = useState({ x: -100, y: -100, width: 1200, height: 800 }); // State to manage viewBox
+  const containerRef = useRef<HTMLDivElement>(null); // Ref for the container div
+
   // Group transitions by source and target
   const groupedTransitions = states.reduce((acc, sourceNode) => {
     Object.entries(sourceNode.transitions).forEach(([symbol, targetId]) => {
@@ -73,31 +79,124 @@ export const DFAGraph: React.FC<DFAGraphProps> = ({
       labelY: loopCenterY - loopR - 2 // Position label above the loop
     };
   };
-  
+
+  // Zoom in function
+  const zoomIn = () => {
+    setScale((prevScale) => Math.min(prevScale * 1.2, 3)); // Limit max zoom to 3x
+  };
+
+  // Zoom out function
+  const zoomOut = () => {
+    setScale((prevScale) => Math.max(prevScale / 1.2, 0.5)); // Limit min zoom to 0.5x
+  };
+
+  // Update viewBox when scale changes
+  useEffect(() => {
+    if (containerRef.current) {
+      const container = containerRef.current;
+      const { width, height } = container.getBoundingClientRect();
+
+      // Calculate new viewBox dimensions based on scale
+      const newWidth = width / scale;
+      const newHeight = height / scale;
+
+      // Center the viewBox
+      const newX = viewBox.x + (viewBox.width - newWidth) / 2;
+      const newY = viewBox.y + (viewBox.height - newHeight) / 2;
+
+      setViewBox({
+        x: newX,
+        y: newY,
+        width: newWidth,
+        height: newHeight,
+      });
+    }
+  }, [scale]);
 
   return (
-    <svg 
-      ref={svgRef}
-      className="w-full h-full scale-150 origin-center"
-      onMouseMove={onMouseMove}
-      onMouseUp={onMouseUp}
-      onMouseLeave={onMouseUp}
-      viewBox="-100 -100 1200 800"
+    <div 
+      ref={containerRef}
+      style={{ overflow: 'auto', width: '100%', height: '100%', position: 'relative' }}
     >
-      {/* Draw transitions */}
-      {Object.entries(groupedTransitions).map(([key, { symbols, source, target }]) => {
-        const targetNode = states.find(n => n.id === target);
-        if (!targetNode) return null;
+      {/* Zoom controls - Sticky on the right side */}
+      <div
+        style={{
+          position: 'fixed', // Make the zoom controls sticky
+          top: '10%', // Center vertically
+          right: 20, // Position on the right side
+          transform: 'translateY(-55%)', // Center vertically
+          zIndex: 1000, // Ensure it's above other elements
+          display: 'flex',
+          flexDirection: 'column', // Stack buttons vertically
+          gap: 8, // Space between buttons
+        }}
+      >
+        <Button
+          onClick={zoomIn}
+          size="lg" // Make the button large
+          variant="outline" // Use outline variant for a clean look
+          className="p-3" // Add padding for a larger click area
+        >
+          <ZoomIn className="h-6 w-6" /> {/* Add zoom-in icon */}
+        </Button>
+        <Button
+          onClick={zoomOut}
+          size="lg" // Make the button large
+          variant="outline" // Use outline variant for a clean look
+          className="p-3" // Add padding for a larger click area
+        >
+          <ZoomOut className="h-6 w-6" /> {/* Add zoom-out icon */}
+        </Button>
+      </div>
 
-        // Check if this is a self-loop
-        if (source.id === target) {
-          // Check if there are any incoming transitions from above
-          const hasTopTransition = Object.values(groupedTransitions).some(
-            trans => trans.target === source.id && 
-            states.find(s => s.id === trans.source.id)?.y < source.y
-          );
+      <svg 
+        ref={svgRef}
+        className="w-full h-full origin-center"
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUp}
+        onMouseLeave={onMouseUp}
+        viewBox={`${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`}
+        style={{ transform: `scale(${scale})`, transformOrigin: '0 0' }}
+      >
+        {/* Draw transitions */}
+        {Object.entries(groupedTransitions).map(([key, { symbols, source, target }]) => {
+          const targetNode = states.find(n => n.id === target);
+          if (!targetNode) return null;
+
+          // Check if this is a self-loop
+          if (source.id === target) {
+            // Check if there are any incoming transitions from above
+            const hasTopTransition = Object.values(groupedTransitions).some(
+              trans => trans.target === source.id && 
+              states.find(s => s.id === trans.source.id)?.y < source.y
+            );
+            
+            const { path, labelX, labelY } = generateSelfLoop(source, hasTopTransition);
+            
+            return (
+              <g key={key}>
+                <path
+                  d={path}
+                  fill="none"
+                  stroke="black"
+                  strokeWidth="1.5"
+                  className="transition-all duration-200"
+                  markerEnd="url(#arrowhead)"
+                />
+                <text 
+                  x={labelX} 
+                  y={labelY} 
+                  textAnchor="middle" 
+                  dy=".3em"
+                  className="text-lg fill-gray-900 font-serif tracking-wider"
+                >
+                  {symbols.join(' , ')}
+                </text>
+              </g>
+            );
+          }
           
-          const { path, labelX, labelY } = generateSelfLoop(source, hasTopTransition);
+          const { path, labelX, labelY } = generatePath(source, targetNode);
           
           return (
             <g key={key}>
@@ -120,98 +219,74 @@ export const DFAGraph: React.FC<DFAGraphProps> = ({
               </text>
             </g>
           );
-        }
+        })}
         
-        const { path, labelX, labelY } = generatePath(source, targetNode);
-        
-        return (
-          <g key={key}>
-            <path
-              d={path}
-              fill="none"
-              stroke="black"
-              strokeWidth="1.5"
-              className="transition-all duration-200"
-              markerEnd="url(#arrowhead)"
-            />
-            <text 
-              x={labelX} 
-              y={labelY} 
-              textAnchor="middle" 
-              dy=".3em"
-              className="text-lg fill-gray-900 font-serif tracking-wider"
-            >
-              {symbols.join(' , ')}
-            </text>
-          </g>
-        );
-      })}
-      
-      {/* Draw nodes */}
-      {states.map((node) => (
-        <g 
-          key={node.id}
-          onMouseDown={(e) => onMouseDown(e, node.id)}
-          className="transition-transform duration-200 cursor-move"
-        >
-          {/* Start state arrow */}
-          {isStartState(node.type) && (
-            <path
-              d={`M ${node.x - 50} ${node.y} L ${node.x - 20} ${node.y}`}
-              stroke="black"
-              strokeWidth="1.5"
-              markerEnd="url(#arrowhead)"
-            />
-          )}
-          
-          {/* Main circle */}
-          <circle
-            cx={node.x}
-            cy={node.y}
-            r="18"
-            className="fill-background stroke-gray-900 stroke-2"
-          />
-          
-          {/* Final state double circle */}
-          {isFinalState(node.type) && (
+        {/* Draw nodes */}
+        {states.map((node) => (
+          <g 
+            key={node.id}
+            onMouseDown={(e) => onMouseDown(e, node.id)}
+            className="transition-transform duration-200 cursor-move"
+          >
+            {/* Start state arrow */}
+            {isStartState(node.type) && (
+              <path
+                d={`M ${node.x - 50} ${node.y} L ${node.x - 20} ${node.y}`}
+                stroke="black"
+                strokeWidth="1.5"
+                markerEnd="url(#arrowhead)"
+              />
+            )}
+            
+            {/* Main circle */}
             <circle
               cx={node.x}
               cy={node.y}
-              r="22"
-              className="fill-none stroke-gray-900 stroke-2"
+              r="18"
+              className="fill-background stroke-gray-900 stroke-2"
             />
-          )}
-          
-          {/* State label */}
-          <text
-            x={node.x}
-            y={node.y}
-            textAnchor="middle"
-            dy=".2em"
-            className="select-none fill-gray-900 text-lg font-serif"
+            
+            {/* Final state double circle */}
+            {isFinalState(node.type) && (
+              <circle
+                cx={node.x}
+                cy={node.y}
+                r="22"
+                className="fill-none stroke-gray-900 stroke-2"
+              />
+            )}
+            
+            {/* State label */}
+            <text
+              x={node.x}
+              y={node.y}
+              textAnchor="middle"
+              dy=".2em"
+              className="select-none fill-gray-900 text-lg font-serif"
+            >
+              {node.id}
+            </text>
+          </g>
+        ))}
+        
+        {/* Arrow marker definition */}
+        <defs>
+          <marker
+            id="arrowhead"
+            markerWidth="8"
+            markerHeight="6"
+            refX="8"
+            refY="3"
+            orient="auto"
           >
-            {node.id}
-          </text>
-        </g>
-      ))}
-      
-      {/* Arrow marker definition */}
-      <defs>
-        <marker
-          id="arrowhead"
-          markerWidth="8"
-          markerHeight="6"
-          refX="8"
-          refY="3"
-          orient="auto"
-        >
-          <polygon 
-            points="0 0, 8 3, 0 6" 
-            fill="black" 
-            strokeWidth="1"
-          />
-        </marker>
-      </defs>
-    </svg>
+            <polygon 
+              points="0 0, 8 3, 0 6" 
+              fill="black" 
+              strokeWidth="1"
+            />
+          </marker>
+        </defs>
+      </svg>
+    </div>
   );
 };
