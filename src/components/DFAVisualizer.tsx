@@ -97,8 +97,20 @@ const DFAVisualizer = () => {
         const data = JSON.parse(content);
 
         if (data.alphabet && Array.isArray(data.states)) {
+          const newAlphabetArray = data.alphabet.split(',').map((c: string) => c.trim());
+          // Normalize transitions for all alphabet symbols
+          const normalizedStates = data.states.map((state: DFAState) => {
+            const transitions = Object.fromEntries(
+              newAlphabetArray.map((char: string) => [
+                char, 
+                state.transitions[char] || 'none' // Fill missing symbols with 'none'
+              ])
+            );
+            return { ...state, transitions };
+          });
+
           setAlphabet(data.alphabet);
-          setStates(data.states);
+          setStates(normalizedStates); // Use normalized states
           toast({
             title: "Import Successful",
             description: "Your DFA FSM has been imported successfully.",
