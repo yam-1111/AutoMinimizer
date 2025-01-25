@@ -16,6 +16,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
+import { ThemeToggle } from './ui/theme-toggle';
 
 const DFAVisualizer = () => {
   const [alphabet, setAlphabet] = useState('a,b');
@@ -240,10 +241,15 @@ const DFAVisualizer = () => {
         {/* Left Panel - State Table */}
         <ResizablePanel defaultSize={25} minSize={15} maxSize={45}>
           <div className="p-6 border-b">
-            <h1 className="text-2xl font-bold text-primary">AutoMinimizer</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              A Visualizer for the Deterministic Finite Automata (DFA) Minimization
-            </p>
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-2xl font-bold text-primary">AutoMinimizer</h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  A Visualizer for the Deterministic Finite Automata (DFA) Minimization
+                </p>
+              </div>
+              <ThemeToggle />
+            </div>
           </div>
           <div className="h-full border-r border-border bg-card p-4 overflow-y-auto">
             <div className="space-y-6">
