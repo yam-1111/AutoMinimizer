@@ -35,13 +35,17 @@ export const MyhillNerodeVisualizer: React.FC<MyhillNerodeVisualizerProps> = ({
   });
   const [showMinimized, setShowMinimized] = useState(false);
   const [minimizationComplete, setMinimizationComplete] = useState(false);
-
   const [minimizedStates, setMinimizedStates] = useState<DFAState[]>([]);
   const svgRef = React.useRef<SVGSVGElement>(null);
+  const [currentIteration, setCurrentIteration] = useState(0);
+  const [iterationHistory, setIterationHistory] = useState<MyhillNerodeTable[]>([]);
 
   useEffect(() => {
     if (states.length > 0) {
-      initializeTable();
+      const initialTable = initializeTable();
+      setTable(initialTable);
+      setIterationHistory([initialTable]);
+      setCurrentIteration(0);
       setShowMinimized(false);
       setMinimizationComplete(false);
       setMinimizedStates([]);
@@ -54,7 +58,7 @@ export const MyhillNerodeVisualizer: React.FC<MyhillNerodeVisualizerProps> = ({
 
     // Create empty table for all states except q0
     states.forEach((state1, i) => {
-      if (i === 0) return; // Skip first row for q0
+      if (i === 0) return;
       pairs[state1.id] = {};
       states.slice(0, i).forEach(state2 => {
         pairs[state1.id][state2.id] = false;
@@ -63,11 +67,10 @@ export const MyhillNerodeVisualizer: React.FC<MyhillNerodeVisualizerProps> = ({
 
     // Phase 1: Mark pairs where one is final and other is not
     states.forEach((state1, i) => {
-      if (i === 0) return; // Skip q0
+      if (i === 0) return;
       states.slice(0, i).forEach(state2 => {
         const state1IsFinal = state1.type === 'final' || state1.type === 'start+final';
         const state2IsFinal = state2.type === 'final' || state2.type === 'start+final';
-
         if (state1IsFinal !== state2IsFinal) {
           pairs[state1.id][state2.id] = true;
           markingHistory.push({
@@ -79,11 +82,7 @@ export const MyhillNerodeVisualizer: React.FC<MyhillNerodeVisualizerProps> = ({
       });
     });
 
-    setTable({
-      pairs,
-      iteration: 0,
-      markingHistory,
-    });
+    return { pairs, iteration: 0, markingHistory };;
   };
 
   const isStatePairMarked = (state1: string, state2: string): boolean => {
@@ -103,42 +102,54 @@ export const MyhillNerodeVisualizer: React.FC<MyhillNerodeVisualizerProps> = ({
     let changed = false;
 
     states.forEach((state1, i) => {
-      if (i === 0) return; // Skip q0
+      if (i === 0) return;
       states.slice(0, i).forEach(state2 => {
-        if (!newPairs[state1.id][state2.id]) {  // If not already marked
+        if (!newPairs[state1.id][state2.id]) {
           for (const symbol of alphabet) {
-            const nextState1 = state1.transitions[symbol];
-            const nextState2 = state2.transitions[symbol];
-
-            if (nextState1 !== nextState2) {
-              if (isStatePairMarked(nextState1, nextState2)) {
-                newPairs[state1.id][state2.id] = true;
-                newHistory.push({
-                  pair: [state1.id, state2.id],
-                  reason: `Transitions on '${symbol}' lead to distinguishable states (${nextState1}, ${nextState2})`,
-                  iteration: table.iteration + 1,
-                });
-                changed = true;
-                break;
-              }
+            // Handle undefined transitions by falling back to 'none'
+            const nextState1 = state1.transitions[symbol] ?? 'none';
+            const nextState2 = state2.transitions[symbol] ?? 'none';
+            if (nextState1 !== nextState2 && isStatePairMarked(nextState1, nextState2)) {
+              newPairs[state1.id][state2.id] = true;
+              newHistory.push({
+                pair: [state1.id, state2.id],
+                reason: `Transitions on '${symbol}' lead to distinguishable states (${nextState1}, ${nextState2})`,
+                iteration: table.iteration + 1,
+              });
+              changed = true;
+              break;
             }
           }
         }
       });
     });
 
-    if (!changed) {
-      const minStates = generateMinimizedDFA();
-      setMinimizedStates(minStates);
-      setMinimizationComplete(true);
-      onMinimizedDFA(minStates);
-    }
 
-    setTable({
+    const newIterationTable = {
       pairs: newPairs,
       iteration: table.iteration + 1,
       markingHistory: newHistory,
-    });
+    };
+
+    const updatedHistory = [...iterationHistory, newIterationTable];
+    setIterationHistory(updatedHistory);
+    setCurrentIteration(updatedHistory.length - 1);
+    setTable(newIterationTable);
+
+    if (!changed) {
+      const minStates = generateMinimizedDFA();
+      setMinimizedStates(minStates);
+      setMinimizationComplete(true); // Disables the Next button
+      onMinimizedDFA(minStates);
+    }
+  };
+
+  const goToPreviousIteration = () => {
+    if (currentIteration > 0) {
+      const prevIteration = currentIteration - 1;
+      setCurrentIteration(prevIteration);
+      setTable(iterationHistory[prevIteration]);
+    }
   };
 
   const findEquivalenceClasses = () => {
@@ -218,10 +229,16 @@ export const MyhillNerodeVisualizer: React.FC<MyhillNerodeVisualizerProps> = ({
           <h3 className="text-lg font-medium">Myhill-Nerode Minimization</h3>
           <div className="space-x-2">
             <Button
+              onClick={goToPreviousIteration}
+              disabled={currentIteration <= 0}
+            >
+              Previous
+            </Button>
+            <Button
               onClick={performIteration}
               disabled={minimizationComplete}
             >
-              Next Iteration
+              Next
             </Button>
             <Button
               onClick={() => setShowMinimized(!showMinimized)}
