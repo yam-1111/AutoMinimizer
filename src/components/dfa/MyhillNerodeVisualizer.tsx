@@ -42,7 +42,10 @@ export const MyhillNerodeVisualizer: React.FC<MyhillNerodeVisualizerProps> = ({
   const [iterationHistory, setIterationHistory] = useState<MyhillNerodeTable[]>([]);
   const [mergedFSM, setMergedFSM] = useState<FSM | null>(null);
   const [draggedState, setDraggedState] = useState<string | null>(null);
-
+  const [scale, setScale] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDraggingCanvas, setIsDraggingCanvas] = useState(false);
+  const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     if (states.length > 0) {
@@ -242,7 +245,41 @@ export const MyhillNerodeVisualizer: React.FC<MyhillNerodeVisualizerProps> = ({
   };
 
 
-  // Add handlers for dragging states
+  // Zoom controls
+  const handleZoomIn = () => {
+    setScale(prev => Math.min(prev + 0.2, 3));
+  };
+
+  const handleZoomOut = () => {
+    setScale(prev => Math.max(prev - 0.2, 0.5));
+  };
+
+  // Pan controls
+  const handleCanvasMouseDown = (event: React.MouseEvent) => {
+    if (event.button === 1 || event.button === 0) { // Middle mouse or left mouse with move tool
+      setIsDraggingCanvas(true);
+      setLastMousePos({ x: event.clientX, y: event.clientY });
+      event.preventDefault();
+    }
+  };
+
+  const handleCanvasMouseMove = (event: React.MouseEvent) => {
+    if (isDraggingCanvas) {
+      const dx = event.clientX - lastMousePos.x;
+      const dy = event.clientY - lastMousePos.y;
+      setPosition(prev => ({
+        x: prev.x + dx,
+        y: prev.y + dy
+      }));
+      setLastMousePos({ x: event.clientX, y: event.clientY });
+    }
+  };
+
+  const handleCanvasMouseUp = () => {
+    setIsDraggingCanvas(false);
+  };
+
+  // State dragging handlers
   const handleMouseDown = (event: React.MouseEvent, stateId: string) => {
     setDraggedState(stateId);
     event.preventDefault();
@@ -253,8 +290,8 @@ export const MyhillNerodeVisualizer: React.FC<MyhillNerodeVisualizerProps> = ({
 
     const svg = svgRef.current;
     const point = svg.createSVGPoint();
-    point.x = event.clientX;
-    point.y = event.clientY;
+    point.x = (event.clientX - position.x) / scale;
+    point.y = (event.clientY - position.y) / scale;
     const ctm = svg.getScreenCTM();
     if (!ctm) return;
     const svgPoint = point.matrixTransform(ctm.inverse());
