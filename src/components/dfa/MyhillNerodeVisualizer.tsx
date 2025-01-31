@@ -331,12 +331,12 @@ export const MyhillNerodeVisualizer: React.FC<MyhillNerodeVisualizerProps> = ({
             >
               Next
             </Button>
-            <Button
+           {/*} <Button
               onClick={() => setShowMinimized(!showMinimized)}
               disabled={!minimizationComplete}
             >
               {showMinimized ? 'Hide' : 'Show'} Minimized DFA
-            </Button>
+            </Button> */}
           </div>
         </div>
       </div>
