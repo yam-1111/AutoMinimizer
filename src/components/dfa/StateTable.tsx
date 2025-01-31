@@ -8,6 +8,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface StateTableProps {
   states: DFAState[];
@@ -18,6 +24,7 @@ interface StateTableProps {
   onAddState: () => void;
   onImport: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onExport: () => void;
+  onSampleImport: (filename: string) => void;
 }
 
 export const StateTable: React.FC<StateTableProps> = ({
@@ -29,6 +36,7 @@ export const StateTable: React.FC<StateTableProps> = ({
   onAddState,
   onImport,
   onExport,
+  onSampleImport
 }) => {
   return (
     <div className="flex flex-col h-full">
@@ -54,6 +62,25 @@ export const StateTable: React.FC<StateTableProps> = ({
             Import (.alt)
           </div>
         </label>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex-1 px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:opacity-90 transition-opacity">
+              Load Sample
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => onSampleImport('dfa_minimization_example.alt')}>
+              Basic Minimization Example
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onSampleImport('neso_dfa_minimization_sample.alt')}>
+              Neso Academy Example
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onSampleImport('neso_dfa_minimization__unreachable_sample.alt')}>
+              Unreachable States Example
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <button
           onClick={onExport}
           className="flex-1 px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:opacity-90 transition-opacity"
