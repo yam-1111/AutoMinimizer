@@ -25,3 +25,9 @@ export interface MyhillNerodeTable {
     iteration: number;
   }>;
 }
+
+export interface FSM {
+  alphabet: string[];
+  states: DFAState[];
+}
+
