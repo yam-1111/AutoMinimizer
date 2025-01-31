@@ -102,7 +102,7 @@ const DFAVisualizer = () => {
           const normalizedStates = data.states.map((state: DFAState) => {
             const transitions = Object.fromEntries(
               newAlphabetArray.map((char: string) => [
-                char, 
+                char,
                 state.transitions[char] || 'none' // Fill missing symbols with 'none'
               ])
             );
@@ -247,6 +247,41 @@ const DFAVisualizer = () => {
     });
   };
 
+  const handleSampleImport = async (filename: string) => {
+    try {
+      const response = await fetch(`/dfa_examples/${filename}`);
+      if (!response.ok) throw new Error('Sample not found');
+
+      const data = await response.json();
+      const newAlphabetArray = data.alphabet.split(',').map((c: string) => c.trim());
+
+      // Normalize transitions same as regular import
+      const normalizedStates = data.states.map((state: DFAState) => {
+        const transitions = Object.fromEntries(
+          newAlphabetArray.map((char: string) => [
+            char,
+            state.transitions[char] || 'none'
+          ])
+        );
+        return { ...state, transitions };
+      });
+
+      setAlphabet(data.alphabet);
+      setStates(normalizedStates);
+
+      toast({
+        title: "Sample Loaded",
+        description: `${filename} has been loaded successfully`,
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to Load Sample",
+        description: "Could not load the selected sample file",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen">
       <ResizablePanelGroup direction="horizontal" className="flex-1">
@@ -285,6 +320,7 @@ const DFAVisualizer = () => {
                 onAddState={addState}
                 onImport={handleImport}
                 onExport={handleExport}
+                onSampleImport={handleSampleImport}
               />
             </div>
           </div>
