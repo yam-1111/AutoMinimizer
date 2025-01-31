@@ -1,5 +1,5 @@
 import { MyhillNerodeTable } from '@/types/dfa';
-import { DFAState } from '@/types/dfa';
+import { DFAState, FSM } from '@/types/dfa';
 import React, { useState, useEffect } from 'react';
 import {
   ResizablePanel,
@@ -16,6 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { mergeStatePairs } from '@/utils/MyhillMerge';
 
 interface MyhillNerodeVisualizerProps {
   states: DFAState[];
@@ -39,6 +40,9 @@ export const MyhillNerodeVisualizer: React.FC<MyhillNerodeVisualizerProps> = ({
   const svgRef = React.useRef<SVGSVGElement>(null);
   const [currentIteration, setCurrentIteration] = useState(0);
   const [iterationHistory, setIterationHistory] = useState<MyhillNerodeTable[]>([]);
+  const [mergedFSM, setMergedFSM] = useState<FSM | null>(null);
+  const [draggedState, setDraggedState] = useState<string | null>(null);
+
 
   useEffect(() => {
     if (states.length > 0) {
@@ -51,6 +55,21 @@ export const MyhillNerodeVisualizer: React.FC<MyhillNerodeVisualizerProps> = ({
       setMinimizedStates([]);
     }
   }, [states, alphabet]);
+
+  // New effect for merged FSM updates
+  useEffect(() => {
+    if (states.length > 0 && table.pairs) {
+      const unmarked = states
+        .slice(1)
+        .flatMap((state1, i) =>
+          states.slice(0, i + 1)
+            .filter(state2 => !table.pairs[state1.id]?.[state2.id])
+            .map(state2 => [state1.id, state2.id])
+        );
+      const fsmCopy = JSON.parse(JSON.stringify({ states, alphabet }));
+      setMergedFSM(mergeStatePairs(fsmCopy, unmarked));
+    }
+  }, [table.pairs, states, alphabet]);
 
   const initializeTable = () => {
     const pairs: Record<string, Record<string, boolean>> = {};
@@ -222,8 +241,43 @@ export const MyhillNerodeVisualizer: React.FC<MyhillNerodeVisualizerProps> = ({
     });
   };
 
+
+  // Add handlers for dragging states
+  const handleMouseDown = (event: React.MouseEvent, stateId: string) => {
+    setDraggedState(stateId);
+    event.preventDefault();
+  };
+
+  const handleMouseMove = (event: React.MouseEvent) => {
+    if (!draggedState || !svgRef.current || !mergedFSM) return;
+
+    const svg = svgRef.current;
+    const point = svg.createSVGPoint();
+    point.x = event.clientX;
+    point.y = event.clientY;
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return;
+    const svgPoint = point.matrixTransform(ctm.inverse());
+
+    setMergedFSM(prev => ({
+      ...prev!,
+      states: prev!.states.map(state => {
+        if (state.id === draggedState) {
+          return { ...state, x: svgPoint.x, y: svgPoint.y };
+        }
+        return state;
+      })
+    }));
+  };
+
+  const handleMouseUp = () => {
+    setDraggedState(null);
+  };
+
   return (
+
     <div className="h-full flex flex-col">
+      {/* Main Container */}
       <div className="p-4 border-b">
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-medium">Myhill-Nerode Minimization</h3>
@@ -249,7 +303,7 @@ export const MyhillNerodeVisualizer: React.FC<MyhillNerodeVisualizerProps> = ({
           </div>
         </div>
       </div>
-
+      {/* Table and Marking History */}
       <div className="flex-1 p-4 overflow-auto">
         <div className="grid grid-cols-2 gap-4">
           <div className="border rounded-lg p-4">
@@ -288,7 +342,7 @@ export const MyhillNerodeVisualizer: React.FC<MyhillNerodeVisualizerProps> = ({
               </Table>
             </div>
           </div>
-
+          {/* Marking History */}
           <div className="border rounded-lg p-4">
             <h4 className="font-medium mb-2">Marking History</h4>
             <div className="max-h-[calc(100vh-400px)] overflow-y-auto">
@@ -306,7 +360,7 @@ export const MyhillNerodeVisualizer: React.FC<MyhillNerodeVisualizerProps> = ({
             </div>
           </div>
         </div>
-
+        {/* Minimized DFA */}
         {showMinimized && minimizedStates.length > 0 && (
           <div className="mt-4 border rounded-lg p-4">
             <h4 className="font-medium mb-2">Minimized DFA</h4>
@@ -322,6 +376,7 @@ export const MyhillNerodeVisualizer: React.FC<MyhillNerodeVisualizerProps> = ({
           </div>
         )}
 
+        {/* Unmarked Pairs */}
         <div className="border rounded-lg p-4 mt-4">
           <h4 className="font-medium mb-2">Unmarked Pairs</h4>
           <div className="overflow-auto max-h-[300px]">
@@ -336,7 +391,31 @@ export const MyhillNerodeVisualizer: React.FC<MyhillNerodeVisualizerProps> = ({
             ))}
           </div>
         </div>
+
+
+
+        <div className="border rounded-lg p-4 mt-4">
+          <h4 className="font-medium mb-2">Merged DFA Visualization</h4>
+          <div className="h-[300px] relative bg-background">
+            <div className="absolute inset-0">
+              {mergedFSM ? (
+                <DFAGraph
+                  states={mergedFSM.states}
+                  svgRef={svgRef}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  onMouseDown={handleMouseDown}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full w-full text-muted-foreground">
+                  Merged DFA will appear here
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+
+    </div >
   );
 };
