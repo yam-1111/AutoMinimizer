@@ -17,6 +17,7 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { ThemeToggle } from './ui/theme-toggle';
+import Footer from '@/components/Footer';
 
 const DFAVisualizer = () => {
   const [alphabet, setAlphabet] = useState('a,b');
@@ -283,80 +284,82 @@ const DFAVisualizer = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen">
-      <ResizablePanelGroup direction="horizontal" className="flex-1">
-        {/* Left Panel - State Table */}
-        <ResizablePanel defaultSize={25} minSize={15} maxSize={45}>
-          <div className="p-6 border-b">
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-2xl font-bold text-primary">AutoMinimizer</h1>
-                <p className="text-sm text-muted-foreground mt-1">
-                  A Visualizer for the Deterministic Finite Automata (DFA) Minimization
-                </p>
+    <div className="flex flex-col min-h-screen">
+      <div className="flex-grow flex flex-col">
+        <ResizablePanelGroup direction="horizontal" className="flex-grow">
+          {/* Left Panel - State Table */}
+          <ResizablePanel defaultSize={25} minSize={15} maxSize={45}>
+            <div className="p-6 border-b">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h1 className="text-2xl font-bold text-primary">AutoMinimizer</h1>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    A Visualizer for the Deterministic Finite Automata (DFA) Minimization
+                  </p>
+                </div>
+                <ThemeToggle />
               </div>
-              <ThemeToggle />
             </div>
-          </div>
-          <div className="h-full border-r border-border bg-card p-4 overflow-y-auto">
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Alphabet (Σ)</label>
-                <input
-                  type="text"
-                  value={alphabet}
-                  onChange={(e) => handleAlphabetChange(e.target.value)}
-                  className="w-full p-2 border rounded-md bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
-                  placeholder="Enter symbols separated by comma"
-                />
-              </div>
+            <div className="h-full border-r border-border bg-card p-4 overflow-y-auto">
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">Alphabet (Σ)</label>
+                  <input
+                    type="text"
+                    value={alphabet}
+                    onChange={(e) => handleAlphabetChange(e.target.value)}
+                    className="w-full p-2 border rounded-md bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Enter symbols separated by comma"
+                  />
+                </div>
 
-              <StateTable
-                states={states}
-                alphabetArray={alphabetArray}
-                onTypeChange={handleTypeChange}
-                onTransitionChange={handleTransitionChange}
-                onRemoveState={removeState}
-                onAddState={addState}
-                onImport={handleImport}
-                onExport={handleExport}
-                onSampleImport={handleSampleImport}
-              />
-            </div>
-          </div>
-        </ResizablePanel>
-
-        <ResizableHandle />
-
-        {/* Right Panel - Graph and Minimization */}
-        <ResizablePanel defaultSize={75}>
-          <ResizablePanelGroup direction="vertical">
-            {/* Upper Panel - DFA Graph */}
-            <ResizablePanel defaultSize={50}>
-              <div className="h-full relative bg-background">
-                <DFAGraph
+                <StateTable
                   states={states}
-                  svgRef={svgRef}
-                  onMouseMove={handleMouseMove}
-                  onMouseUp={handleMouseUp}
-                  onMouseDown={handleMouseDown}
+                  alphabetArray={alphabetArray}
+                  onTypeChange={handleTypeChange}
+                  onTransitionChange={handleTransitionChange}
+                  onRemoveState={removeState}
+                  onAddState={addState}
+                  onImport={handleImport}
+                  onExport={handleExport}
+                  onSampleImport={handleSampleImport}
                 />
               </div>
-            </ResizablePanel>
+            </div>
+          </ResizablePanel>
 
-            <ResizableHandle />
+          <ResizableHandle />
 
-            {/* Lower Panel - Myhill-Nerode Visualization */}
-            <ResizablePanel defaultSize={50}>
-              <MyhillNerodeVisualizer
-                states={states}
-                alphabet={alphabetArray}
-                onMinimizedDFA={setMinimizedStates}
-              />
-            </ResizablePanel>
-          </ResizablePanelGroup>
-        </ResizablePanel>
-      </ResizablePanelGroup>
+          {/* Right Panel - Graph and Minimization */}
+          <ResizablePanel defaultSize={75}>
+            <ResizablePanelGroup direction="vertical">
+              {/* Upper Panel - DFA Graph */}
+              <ResizablePanel defaultSize={50}>
+                <div className="h-full relative bg-background">
+                  <DFAGraph
+                    states={states}
+                    svgRef={svgRef}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                    onMouseDown={handleMouseDown}
+                  />
+                </div>
+              </ResizablePanel>
+
+              <ResizableHandle />
+
+              {/* Lower Panel - Myhill-Nerode Visualization */}
+              <ResizablePanel defaultSize={50}>
+                <MyhillNerodeVisualizer
+                  states={states}
+                  alphabet={alphabetArray}
+                  onMinimizedDFA={setMinimizedStates}
+                />
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </div>
 
       <Dialog open={showWarning} onOpenChange={setShowWarning}>
         <DialogContent>
@@ -366,6 +369,7 @@ const DFAVisualizer = () => {
           <AlertDescription>{warningMessage}</AlertDescription>
         </DialogContent>
       </Dialog>
+      <Footer />
     </div>
   );
 };
